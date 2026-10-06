@@ -1,0 +1,880 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Climate Controller Wiring</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a bench sheet. The board pinout anchors the top, the prototype-board floor
+   plan and the cabling rules follow, wiring cards with circuit sketches below. */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --fg: #17201d;
+  --muted: #5a6762;
+  --line: #d5ddd9;
+  --accent: #0f7b6c;
+
+  --board: #1d2a3a;
+  --board-edge: #0e1722;
+  --silk: #e9eef3;
+  --shield: #b9c2cb;
+  --shield-edge: #8d98a3;
+  --pin-idle: #6f7c88;
+  --pin-ring: #d9b56a;
+  --perf: #d9c39a;
+  --perf-edge: #b59a68;
+  --perf-hole: #9c7f4c;
+  --res-body: #d8c7a0;
+  --res-edge: #8a7650;
+  --elco: #2c3e66;
+  --elco-edge: #1a2540;
+  --elco-stripe: #c9d2e3;
+  --to92: #3a3a3a;
+  --to92-edge: #1a1a1a;
+  --on-dark: #ffffff;
+
+  --c-sensor: #2f7fd1;
+  --c-room: #1f9fb4;
+  --c-box: #2f9e44;
+  --c-ir: #c2410c;
+  --c-relay: #7c3aed;
+  --c-power: #d1293b;
+  --c-3v3: #e07b12;
+  --c-gnd: #3a4a44;
+  --c-avoid: #8a6d00;
+
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Barlow", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #9aa8a2; --line: #2b3632; --accent: #3cc2ad;
+    --board: #22324a; --board-edge: #0a111b; --silk: #e9eef3; --shield: #9aa5b0; --shield-edge: #6c7782;
+    --pin-idle: #7d8a96; --pin-ring: #caa458;
+    --perf: #5c4a2c; --perf-edge: #3e321d; --perf-hole: #2a2113;
+    --c-sensor: #5ea8f0; --c-room: #4cc6d8; --c-box: #5cc879; --c-ir: #f07a3c; --c-relay: #a98bf5; --c-power: #f05a69; --c-3v3: #f5a04a; --c-gnd: #9fb0a9; --c-avoid: #d9b23a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111715; --surface: #18201d; --fg: #e6ece9; --muted: #9aa8a2; --line: #2b3632; --accent: #3cc2ad;
+  --board: #22324a; --board-edge: #0a111b; --silk: #e9eef3; --shield: #9aa5b0; --shield-edge: #6c7782;
+  --pin-idle: #7d8a96; --pin-ring: #caa458;
+  --perf: #5c4a2c; --perf-edge: #3e321d; --perf-hole: #2a2113;
+  --c-sensor: #5ea8f0; --c-room: #4cc6d8; --c-box: #5cc879; --c-ir: #f07a3c; --c-relay: #a98bf5; --c-power: #f05a69; --c-3v3: #f5a04a; --c-gnd: #9fb0a9; --c-avoid: #d9b23a;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font: 400 16px/1.55 var(--font-body);
+  padding-inline: 16px;
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 48px; }
+section { display: grid; gap: 20px; }
+
+header { display: grid; gap: 8px; }
+.eyebrow {
+  font: 600 13px/1 var(--font-mono);
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+h1 {
+  font: 700 clamp(34px, 5vw, 52px)/1.02 var(--font-display);
+  letter-spacing: .01em;
+  margin: 0;
+  text-wrap: balance;
+}
+.lede { margin: 0; max-width: 68ch; color: var(--muted); }
+h2 { font: 600 28px/1.15 var(--font-display); margin: 0; letter-spacing: .01em; text-wrap: balance; }
+h3 { font: 600 20px/1.2 var(--font-display); margin: 0; letter-spacing: .01em; }
+.section-lede { margin: 0; max-width: 72ch; color: var(--muted); }
+code, .mono { font-family: var(--font-mono); font-size: .88em; }
+p { margin: 0; }
+
+/* Board + parts */
+.bench { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .bench { grid-template-columns: 1fr; } }
+
+.board-frame { overflow-x: auto; }
+.board-frame svg { display: block; width: 100%; max-width: 640px; min-width: 520px; height: auto; margin: 0 auto; }
+.board-hint { font-size: 14px; color: var(--muted); text-align: center; margin-top: 8px; }
+
+.pin { cursor: pointer; }
+.pin circle.pad { fill: var(--pin-ring); stroke: var(--board-edge); stroke-width: 1; }
+.pin circle.hole { fill: var(--board-edge); }
+.pin text.silk { fill: var(--silk); font: 600 11px var(--font-mono); }
+.pin .wire { stroke-width: 2.5; fill: none; opacity: .9; }
+.pin .tag rect { stroke-width: 1.5; }
+.pin .tag text { font: 600 12px var(--font-body); }
+.pin:focus-visible { outline: none; }
+.pin:focus-visible circle.pad, .pin:hover circle.pad { stroke: var(--accent); stroke-width: 3; }
+.pin.dim { opacity: .28; }
+.pin.on circle.pad { stroke: var(--fg); stroke-width: 3; }
+
+.side { display: grid; gap: 20px; min-width: 0; align-content: start; }
+.parts { display: grid; gap: 8px; }
+.part-btn {
+  display: grid; grid-template-columns: 14px 1fr auto; gap: 12px; align-items: center;
+  text-align: left; width: 100%;
+  background: var(--surface); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 14px; font: 500 15px/1.3 var(--font-body); cursor: pointer;
+}
+.part-btn .dot { width: 14px; height: 14px; border-radius: 50%; }
+.part-btn .pins { font: 400 13px var(--font-mono); color: var(--muted); }
+.part-btn[aria-pressed="true"] { border-color: var(--fg); box-shadow: inset 0 0 0 1px var(--fg); }
+.part-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.show-all { justify-self: start; background: none; border: none; color: var(--accent); font: 600 14px var(--font-body); cursor: pointer; padding: 4px 0; }
+.show-all:focus-visible { outline: 2px solid var(--accent); }
+
+.detail { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; display: grid; gap: 8px; min-height: 120px; }
+.detail .label { font: 600 12px var(--font-mono); letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.detail .title { font: 600 22px/1.15 var(--font-display); }
+.detail .state { display: inline-block; font: 600 12px/1 var(--font-mono); padding: 4px 8px; border-radius: 999px; border: 1px solid currentColor; justify-self: start; }
+
+/* Prototype board floor plan */
+.layout { display: grid; gap: 28px; }
+.legend-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 28px; align-items: start; }
+.plan-frame { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+.plan-frame svg { display: block; width: 100%; max-width: 900px; min-width: 640px; height: auto; margin: 0 auto; }
+.plan-frame text { font-family: var(--font-mono); }
+.plan-frame text.halo { paint-order: stroke; stroke: var(--perf); stroke-width: 3px; stroke-linejoin: round; }
+.legend { display: grid; gap: 14px; min-width: 0; }
+.legend-row { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; font-size: 15px; }
+.legend-row svg { width: 28px; height: 16px; margin-top: 4px; }
+.zone-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.zone-list li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; font-size: 15px; }
+.zone-list .zl { font: 600 13px/1 var(--font-mono); border: 1.5px solid currentColor; border-radius: 6px; padding: 5px 0; text-align: center; }
+
+/* Wiring cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 14px; align-content: start; min-width: 0; }
+.card-head { display: flex; gap: 10px; align-items: center; }
+.card-head .dot { width: 12px; height: 12px; border-radius: 50%; flex: none; }
+.conn { width: 100%; border-collapse: collapse; font-size: 15px; }
+.conn td { padding: 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+.conn td:first-child { color: var(--muted); padding-right: 12px; }
+.conn td:last-child { font-family: var(--font-mono); font-size: 14px; text-align: right; white-space: nowrap; }
+.conn tr:last-child td { border-bottom: none; }
+.note { font-size: 14.5px; color: var(--muted); }
+.note strong { color: var(--fg); font-weight: 600; }
+.sketch { overflow-x: auto; background: var(--bg); border-radius: 8px; padding: 10px; }
+.sketch svg { display: block; width: 100%; min-width: 280px; height: auto; }
+.sketch text { fill: var(--fg); font: 500 12px var(--font-mono); }
+.sketch .w { stroke: var(--fg); stroke-width: 1.8; fill: none; }
+.sketch .soft { fill: var(--muted); }
+
+/* Cabling */
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+.rule { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; display: grid; gap: 12px; align-content: start; }
+.rule ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 15px; }
+.rule h3 { display: flex; gap: 10px; align-items: center; }
+.rule h3 .mark { font: 600 13px/1 var(--font-mono); padding: 4px 7px; border-radius: 5px; color: var(--surface); }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+table.data { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 640px; }
+table.data th, table.data td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.data th { font: 600 12px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+table.data tr:last-child td { border-bottom: none; }
+table.data td.mono { white-space: nowrap; }
+table.data .sw { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; vertical-align: 1px; }
+
+.warn { border-left: 4px solid var(--c-avoid); background: var(--surface); border-radius: 0 10px 10px 0; padding: 18px 20px; display: grid; gap: 10px; }
+.warn ul, .card ul { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.options { display: grid; gap: 10px; }
+
+footer { font-size: 14px; color: var(--muted); }
+footer a { color: var(--accent); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .pin { transition: opacity .15s ease; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">ESP32 DevKit V1 · 30 pins · climate controller firmware</div>
+    <h1>Climate controller wiring</h1>
+    <p class="lede">Where each wire goes for the cabinet, room and box temperature sensors, the infrared receiver and LED, and the fan relay, how to lay the parts out on a prototype board, and how to run the cables. Pin numbers in <code>include/config.h</code> are GPIO numbers; the board prints them as D27, D32 and so on.</p>
+  </header>
+
+  <section class="bench" aria-label="Board and parts">
+    <div>
+      <div class="board-frame">
+        <svg id="board" viewBox="0 0 560 700" role="img" aria-labelledby="boardTitle">
+          <title id="boardTitle">ESP32 DevKit V1 30-pin board seen from above, USB connector at the bottom</title>
+          <rect x="180" y="18" width="200" height="642" rx="10" fill="var(--board)" stroke="var(--board-edge)" stroke-width="2"/>
+          <g fill="none" stroke="var(--pin-ring)" stroke-width="3" stroke-linejoin="round" opacity=".85">
+            <path d="M232 40 h96 v14 h-84 v14 h84 v14 h-96"/>
+          </g>
+          <rect x="236" y="96" width="88" height="160" rx="4" fill="var(--shield)" stroke="var(--shield-edge)" stroke-width="2"/>
+          <text x="280" y="170" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--board-edge)">ESP32</text>
+          <text x="280" y="186" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--board-edge)">WROOM-32</text>
+          <rect x="204" y="604" width="34" height="24" rx="4" fill="var(--shield)" stroke="var(--shield-edge)"/>
+          <text x="221" y="642" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--silk)">EN</text>
+          <rect x="322" y="604" width="34" height="24" rx="4" fill="var(--shield)" stroke="var(--shield-edge)"/>
+          <text x="339" y="642" text-anchor="middle" font-family="var(--font-mono)" font-size="10" fill="var(--silk)">BOOT</text>
+          <rect x="252" y="636" width="56" height="44" rx="5" fill="var(--shield)" stroke="var(--shield-edge)" stroke-width="2"/>
+          <text x="280" y="663" text-anchor="middle" font-family="var(--font-mono)" font-size="11" font-weight="600" fill="var(--board-edge)">USB</text>
+          <g id="pins"></g>
+        </svg>
+      </div>
+      <p class="board-hint">Components facing you, antenna at the top. Clones sometimes move pins, so check the printed labels.</p>
+    </div>
+
+    <div class="side">
+      <h2>Parts</h2>
+      <div class="parts" id="parts"></div>
+      <button class="show-all" id="showAll" type="button">Show all connections</button>
+      <div class="detail" id="detail" aria-live="polite"></div>
+    </div>
+  </section>
+
+  <section aria-labelledby="layoutTitle">
+    <h2 id="layoutTitle">Prototype board layout</h2>
+    <p class="section-lede">Everything on 3.3 V sits above the ESP32, next to its 3V3 pin; everything on 5 V sits below. The infrared LED driver (Q1) sits under D32 and the relay driver (Q2) under D27, each in a straight line from its pin; the infrared receiver U1 sits at the right edge on 3.3 V, facing out, and J4 carries only the LED; the box sensor header J6 sits in the top-left corner, above the antenna keep-out; the relay header is at the USB end near the power input, and the supply capacitors sit between the GND and 5 V wires. Below the ESP32 every wire runs on top and nothing crosses: the LED+ wire (row 24) and the ground wire (row 26) run left under the bodies of R7 and R2, and R4 and R9 lie across the GND wire the same way. Nothing runs along the board edge, and the holes between J4, J5 and the edge stay free for the plugs. Every part on its holes, for a 7 × 9 cm perfboard (24 × 36 holes) seen from the component side. Power goes by plain wire, no rails: solid lines run on top, dashed lines underneath, seen through the board. The DevKit plugs in by its own pin headers into two female headers, so it can be added and removed. The layout was checked by a script: every connection is present, no two wires on the same side cross, and no wire passes over another connection's solder joint.</p>
+    <div class="layout">
+      <div class="plan-frame">
+        <svg id="plan" viewBox="0 0 880 950" role="img" aria-labelledby="planTitle">
+          <title id="planTitle">Perfboard layout: above the ESP32, everything on 3.3 V: box sensor header J6 in the top-left corner, cabinet sensor header J1 and room sensor header J2, each with its pull-up, and the infrared receiver U1 at the right edge with its filter. Below, everything on 5 V: the infrared LED driver under D32, the 2-pin LED connector J4, relay driver Q2 and relay header J5 (D27) near the USB end, capacitor C1 at VIN with space beside it for more, and the LED driver parts with transistor Q1, resistors R2, R3, R4, header J4 and capacitor C1</title>
+        </svg>
+      </div>
+      <div class="legend legend-cols">
+        <div class="legend"><h3>Parts on the board</h3>
+        <ul class="zone-list">
+          <li><span class="zl" style="color:var(--c-sensor)">J1</span><span><strong>Cabinet sensor</strong>: 3V3 · DATA (TX2) · GND. <strong>R1</strong> 10 kΩ pull-up, standing.</span></li>
+          <li><span class="zl" style="color:var(--c-room)">J2</span><span><strong>Room sensor</strong>: 3V3 · DATA (RX2) · GND. <strong>R5</strong> 10 kΩ pull-up, standing.</span></li>
+          <li><span class="zl" style="color:var(--c-box)">J6</span><span><strong>Box sensor</strong>: 3V3 · DATA (D23) · GND, in the top-left corner above the antenna keep-out. <strong>R10</strong> 10 kΩ pull-up, standing.</span></li>
+          <li><span class="zl" style="color:var(--c-ir)">U1</span><span><strong>Infrared receiver</strong> at the right edge, dome facing out: OUT (D4) · GND · VCC on 3.3 V. <strong>R6</strong> 100 Ω from 3V3 to VCC, <strong>C4</strong> 10 µF across VCC and GND.</span></li>
+          <li><span class="zl" style="color:var(--c-relay)">J5</span><span><strong>Relay control</strong>: IN · GND · 5V, at the USB end. Marked red: 5 V. Check the order against your relay module's pins before plugging in.</span></li>
+          <li><span class="zl" style="color:var(--c-relay)">Q2</span><span><strong>Relay driver</strong>, under D27: <strong>R7</strong> 1 kΩ from D27 to the base, <strong>R8</strong> 10 kΩ standing between base and emitter (keeps the relay off while the ESP32 starts), <strong>Q2</strong> pulls the module's IN to GND, <strong>R9</strong> 10 kΩ lying from the collector across the GND wire to 5 V gives a clean 5 V for off.</span></li>
+          <li><span class="zl" style="color:var(--c-ir)">J4</span><span><strong>Infrared LED</strong>, 2 pins: LED+ · LED−. Marked red: 5 V. <strong>R2</strong> 1 kΩ from D32 to the base, <strong>R3</strong> 10 kΩ standing between base and emitter, <strong>R4</strong> 33 Ω from 5 V to LED+, lying across the GND wire, <strong>Q1</strong> switches LED− to GND.</span></li>
+          <li><span class="zl" style="color:var(--c-power)">C1</span><span><strong>470 µF</strong> across GND (column 19) and 5 V (column 20) beside VIN. Mind the polarity: the stripe (−) goes to column 19.</span></li>
+          <li><span class="zl" style="color:var(--c-power)">+C</span><span><strong>Room for more capacitors</strong> in the dashed box: column 19 is GND and column 20 is 5 V, rows 27 to 29. Solder each capacitor across the two holes of one row, − on column 19, + on column 20.</span></li>
+        </ul></div>
+        <div class="legend"><h3>Drawing key</h3>
+        <div class="legend-row"><svg viewBox="0 0 28 16"><line x1="2" y1="8" x2="26" y2="8" stroke="var(--perf)" stroke-width="6"/><line x1="2" y1="8" x2="26" y2="8" stroke="var(--c-sensor)" stroke-width="2.5"/></svg><span>Wire on top (component side)</span></div>
+        <div class="legend-row"><svg viewBox="0 0 28 16"><line x1="2" y1="8" x2="26" y2="8" stroke="var(--c-3v3)" stroke-width="2.2" stroke-dasharray="5 3"/></svg><span>Insulated wire underneath. Top and bottom wires may cross, they're on different sides.</span></div>
+        <div class="legend-row"><svg viewBox="0 0 28 16"><circle cx="14" cy="8" r="3.2" fill="var(--fg)"/></svg><span>Solder joint</span></div>
+        <div class="legend-row"><svg viewBox="0 0 28 16"><line x1="2" y1="8" x2="10" y2="8" stroke="var(--c-3v3)" stroke-width="3"/><line x1="10" y1="8" x2="18" y2="8" stroke="var(--c-power)" stroke-width="3"/><line x1="18" y1="8" x2="26" y2="8" stroke="var(--c-gnd)" stroke-width="3"/></svg><span>3V3 orange · 5 V red · GND grey; signals in their part's colour</span></div></div>
+        <div class="legend"><h3>Building it</h3>
+        <p class="note"><strong>Transistor pins.</strong> Q1 and Q2 go in as E-B-C from the left. A 2N2222 has that order seen from its flat side: flat side facing you, as drawn. A BC547 is C-B-E seen from its flat side: put it in with the flat side away from you. Either way, match the legs to the holes marked E, B and C.</p>
+        <p class="note"><strong>Mounting the DevKit.</strong> If its pin headers came loose in the kit, solder them to the DevKit first, pointing down from the component side. Solder two 15-pin female headers on rows 12 and 22 as drawn; the DevKit then plugs in and out. Count the holes between your DevKit's two pin rows first: most 30-pin boards are 10 holes (25.4 mm) apart, as drawn, but clones vary.</p>
+        <p class="note"><strong>Standing resistors.</strong> R1, R3, R5, R8 and R10 stand upright on two neighbouring holes: one leg straight down, the other bent back over the top of the body.</p>
+        <p class="note"><strong>Wires under resistors.</strong> R2, R4, R7 and R9 lie flat across wires (LED+ and ground under R2 and R7, ground under R4 and R9). Use insulated wire for those runs, or mount the resistors a few millimetres off the board, so their bare leads never touch the wires.</p>
+        <p class="note"><strong>Receiver legs.</strong> U1 is drawn for a VS1838B (OUT, GND, VCC from top to bottom with the dome facing right). Other receivers order their legs differently: check its datasheet and match the labels.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-labelledby="cablingTitle">
+    <h2 id="cablingTitle">Cabling</h2>
+    <div class="rules">
+      <article class="rule">
+        <h3><span class="mark" style="background:var(--accent)">near</span>Keep together</h3>
+        <ul>
+          <li>Pull-up resistors next to their header on the board.</li>
+          <li>A 100 nF capacitor across + and − at each bare sensor (modules have one).</li>
+          <li>The LED transistor and its resistors next to D32. The cable then carries only switched LED current.</li>
+          <li>The 470 µF capacitor, and any you add, right beside VIN and GND.</li>
+          <li>Each cable's ground wire in the same cable as its signal. In a network cable, pair each signal with a ground wire.</li>
+          <li>The receiver's 10 µF (C4) and 100 Ω (R6) right beside it.</li>
+          <li>All 3.3 V parts on one side of the ESP32, all 5 V parts on the other.</li>
+        </ul>
+      </article>
+      <article class="rule">
+        <h3><span class="mark" style="background:var(--c-power)">apart</span>Keep apart</h3>
+        <ul>
+          <li><strong>Mains never on the perfboard.</strong> It isn't rated for it. The relay module and the fan wiring go in their own compartment, with strain relief and a fused feed.</li>
+          <li>Mains cables at least 10 cm from sensor and receiver cables. Where they must cross, cross at a right angle.</li>
+          <li>Nothing metal near the antenna end: no wires or screws. A <strong>metal cabinet blocks Wi-Fi</strong>, so mount the board near a plastic panel or outside the cabinet.</li>
+          <li>The room sensor away from the cabinet's exhaust, the fan's airflow and the board itself. The cabinet sensor in the air you want to control, not on top of a hot component.</li>
+          <li>The box sensor away from the ESP32 module and the relay, on a short lead: plugged straight into J6 it would read the module's own heat.</li>
+          <li>The infrared receiver out of direct sunlight and lamp light, which carry infrared noise.</li>
+        </ul>
+      </article>
+      <article class="rule">
+        <h3><span class="mark" style="background:var(--c-relay)">plugs</span>Connectors</h3>
+        <ul>
+          <li>Male pin headers (spare ones from the kit work) with Dupont jumper leads are fine for J1, J2, J4, J5 and J6. J4 plugged in reversed only leaves the LED dark. Screw terminals or JST-XH hold better if the box gets moved.</li>
+          <li>The same pin order on all three 3.3 V connectors (J1, J2, J6): <strong>3V3, signal, GND</strong>.</li>
+          <li>Keep the 5 V ones (J4 infrared LED, J5 relay) apart from the 3.3 V ones, as drawn, and mark them in red. Plain pin headers are not keyed, so a sensor lead plugged into 5 V would damage the ESP32 input.</li>
+          <li>Label J1, J2, J4, J5 and J6 on the board next to each header.</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Cable</th><th>From</th><th>Wires</th><th>Length</th><th>Notes</th></tr></thead>
+        <tbody>
+          <tr><td><span class="sw" style="background:var(--c-sensor)"></span>Cabinet sensor</td><td class="mono">J1</td><td>3-core</td><td class="mono">≤ 1 m</td><td>Any light 3-core cable, such as servo cable.</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-room)"></span>Room sensor</td><td class="mono">J2</td><td>3-core</td><td class="mono">≤ 2 m</td><td>Network cable works well: one pair for data + GND, one for 3V3 + GND.</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-box)"></span>Box sensor</td><td class="mono">J6</td><td>3-core</td><td class="mono">10–20 cm</td><td>Inside the controller's box, just long enough to keep the sensor clear of the ESP32 and the relay.</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-ir)"></span>Infrared LED</td><td class="mono">J4</td><td>2-core, twisted</td><td class="mono">≤ 2 m</td><td>Twist the two wires to keep the 100 mA pulses from radiating. Aim the LED with a clear line to the air conditioner's receiver.</td></tr>
+          <tr><td><span class="sw" style="background:var(--c-relay)"></span>Relay control</td><td class="mono">J5</td><td>3-core</td><td class="mono">≤ 1 m</td><td>Low voltage only. The mains stays at the relay module.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Parts for the board</h3>
+    <div class="table-wrap">
+      <table class="data">
+        <thead><tr><th>Ref</th><th>Part</th><th>Where</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">R1, R5, R10</td><td>10 kΩ</td><td>Pull-ups, TX2, RX2 and D23 to 3V3. Leave out if your sensors are 3-pin modules (they have one).</td></tr>
+          <tr><td class="mono">U1, R6, C4</td><td>VS1838B or TSOP38238, 100 Ω, 10 µF</td><td>Infrared receiver at the right edge, its supply resistor from 3V3 and filter capacitor. Stripe (−) of the 10 µF to GND.</td></tr>
+          <tr><td class="mono">—</td><td>100 nF ceramic (×3)</td><td>Not on the board: at each bare sensor.</td></tr>
+          <tr><td class="mono">Q1</td><td>2N2222 or BC547 (NPN)</td><td>Infrared LED switch.</td></tr>
+          <tr><td class="mono">Q2, R7, R8, R9</td><td>2N2222 or BC547 (NPN), 1 kΩ, 10 kΩ, 10 kΩ</td><td>Relay driver: the module's input needs a full 0 V / 5 V swing, which the 3.3 V ESP32 pin can't give.</td></tr>
+          <tr><td class="mono">R2, R3, R4</td><td>1 kΩ, 10 kΩ, 33 Ω (¼ W)</td><td>Base resistor from D32, base pull-down to GND, LED current limit from 5 V.</td></tr>
+          <tr><td class="mono">C1</td><td>470 µF, 10 V or more</td><td>Across 5 V and GND, beside VIN.</td></tr>
+          <tr><td class="mono">J1, J2, J6</td><td>3-pin male headers</td><td>3.3 V sensors.</td></tr>
+          <tr><td class="mono">J4, J5</td><td>2- and 3-pin male headers, marked red</td><td>5 V: infrared LED and relay.</td></tr>
+          <tr><td class="mono">—</td><td>2 × 15-pin female headers, 7 × 9 cm perfboard, tinned wire, Dupont leads</td><td>Socket for the DevKit, board, wires, cables.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-labelledby="cardsTitle">
+    <h2 id="cardsTitle">Wiring each part</h2>
+    <div class="cards">
+
+      <article class="card" id="card-cabinet">
+        <div class="card-head"><span class="dot" style="background:var(--c-sensor)"></span><h3>Cabinet temperature sensor</h3></div>
+        <table class="conn">
+          <tr><td>Data</td><td>TX2 (GPIO 17)</td></tr>
+          <tr><td>+ / VCC</td><td>3V3</td></tr>
+          <tr><td>− / GND</td><td>GND</td></tr>
+        </table>
+        <p class="note">DHT22 or DHT11: the firmware detects which one from its readings, so there is nothing to configure. A three-pin module already has its pull-up resistor. A bare four-pin sensor needs one:</p>
+        <div class="sketch">
+          <svg viewBox="0 0 320 150" role="img" aria-label="Bare DHT sensor: pin 1 to 3V3, pin 2 to TX2 with a 10 kilo-ohm resistor to 3V3, pin 3 unused, pin 4 to GND">
+            <rect x="20" y="30" width="70" height="90" rx="6" fill="var(--surface)" stroke="var(--fg)" stroke-width="1.8"/>
+            <text x="55" y="80" text-anchor="middle">DHT</text>
+            <g class="w">
+              <path d="M90 45 H200"/><path d="M90 68 H260"/><path d="M90 114 H200"/>
+              <path d="M200 45 V20 H300"/>
+              <path d="M230 45 V52"/><rect x="224" y="52" width="12" height="24" rx="2"/><path d="M230 76 V68"/>
+            </g>
+            <circle cx="230" cy="45" r="3" fill="var(--fg)"/><circle cx="230" cy="68" r="3" fill="var(--fg)"/>
+            <text x="98" y="40">1</text><text x="98" y="63">2</text><text x="98" y="86" class="soft">3 (unused)</text><text x="98" y="109">4</text>
+            <text x="244" y="68" dy="-8">10 kΩ</text>
+            <text x="300" y="16" text-anchor="end">3V3</text>
+            <text x="300" y="72" text-anchor="end">TX2</text>
+            <text x="206" y="118">GND</text>
+          </svg>
+        </div>
+      </article>
+
+      <article class="card" id="card-room">
+        <div class="card-head"><span class="dot" style="background:var(--c-room)"></span><h3>Room temperature sensor (optional)</h3></div>
+        <table class="conn">
+          <tr><td>Data</td><td>RX2 (GPIO 16)</td></tr>
+          <tr><td>+ / VCC</td><td>3V3 (shared)</td></tr>
+          <tr><td>− / GND</td><td>GND (shared)</td></tr>
+        </table>
+        <ul class="note">
+          <li>No setting needed: it's shown as soon as it answers, and as <code>off</code> in the <code>watch</code> line while it doesn't. The model is detected automatically. <code>set fan_use_room off</code> keeps it on display but out of the fan rule.</li>
+          <li>Wired like the cabinet sensor. Up to 2 m of cable is fine with the normal pull-up.</li>
+          <li><strong>Pull up to 3.3 V, never 5 V.</strong> The ESP32 pins are not 5 V tolerant.</li>
+          <li><strong>Calibrate the pair:</strong> put both sensors side by side for 30 minutes, compare <code>Cabinet</code> and <code>Room</code> in <code>status</code>, and set <code>room_offset</code> to the difference.</li>
+        </ul>
+      </article>
+
+      <article class="card" id="card-box">
+        <div class="card-head"><span class="dot" style="background:var(--c-box)"></span><h3>Box temperature sensor (optional)</h3></div>
+        <table class="conn">
+          <tr><td>Data</td><td>D23 (GPIO 23)</td></tr>
+          <tr><td>+ / VCC</td><td>3V3 (shared)</td></tr>
+          <tr><td>− / GND</td><td>GND (shared)</td></tr>
+        </table>
+        <ul class="note">
+          <li>Measures the air inside the controller's own box. <strong>Shown in <code>status</code> and the <code>watch</code> line only</strong>; the rules never use it.</li>
+          <li>No setting needed: it's shown as soon as it answers. Check the wiring with <code>sensor test box</code>, calibrate with <code>box_offset</code>. A DHT11 is fine here: it reads to about ±2 °C.</li>
+          <li>Put it on a short lead, away from the ESP32 module and the relay, which are the warm parts.</li>
+          <li>D23 leaves D21 and D22 free as an I2C pair.</li>
+        </ul>
+      </article>
+
+      <article class="card" id="card-irrx">
+        <div class="card-head"><span class="dot" style="background:var(--c-ir)"></span><h3>Infrared receiver</h3></div>
+        <table class="conn">
+          <tr><td>OUT</td><td>D4</td></tr>
+          <tr><td>VCC (through 100 Ω R6; 10 µF C4 to GND)</td><td>3V3</td></tr>
+          <tr><td>GND</td><td>GND</td></tr>
+        </table>
+        <div class="sketch">
+          <svg viewBox="0 0 340 170" role="img" aria-label="3V3 through 100 ohm to the receiver's VCC, 10 microfarad from VCC to GND at the receiver; receiver OUT straight to D4">
+            <rect x="20" y="40" width="70" height="90" rx="6" fill="var(--surface)" stroke="var(--fg)" stroke-width="1.8"/>
+            <text x="55" y="82" text-anchor="middle">IR</text><text x="55" y="97" text-anchor="middle" class="soft">receiver</text>
+            <g class="w">
+              <path d="M90 58 H180"/><rect x="180" y="52" width="34" height="12" rx="2"/><path d="M214 58 H300"/>
+              <path d="M140 58 V76"/><path d="M130 76 H150 M130 82 H150"/><path d="M140 82 V122"/>
+              <path d="M90 122 H300"/>
+              <path d="M90 100 H300"/>
+            </g>
+            <circle cx="140" cy="58" r="3" fill="var(--fg)"/><circle cx="140" cy="122" r="3" fill="var(--fg)"/>
+            <text x="96" y="52">VCC</text><text x="96" y="95">OUT</text><text x="96" y="117">GND</text>
+            <text x="197" y="46" text-anchor="middle">100 Ω</text>
+            <text x="156" y="84">10 µF</text>
+            <text x="304" y="62">3V3</text>
+            <text x="304" y="104">D4</text>
+            <text x="304" y="126">GND</text>
+          </svg>
+        </div>
+        <p class="note">VS1838B, TSOP38238 or any 38 kHz receiver, on the main board at its right edge (U1), dome facing out. It runs on 3.3 V, so its output goes straight to D4. The 100 Ω and 10 µF filter supply noise from Wi-Fi. <strong>The leg order differs between parts.</strong> On a bare VS1838B it is usually OUT, GND, VCC looking at the dome; check the datasheet or the module's labels. The LED flashing into the receiver is harmless: the firmware ignores its own transmissions.</p>
+      </article>
+
+      <article class="card" id="card-irled">
+        <div class="card-head"><span class="dot" style="background:var(--c-ir)"></span><h3>Infrared LED</h3></div>
+        <table class="conn">
+          <tr><td>Signal (through 1 kΩ to the transistor base)</td><td>D32</td></tr>
+          <tr><td>Supply (through 33 Ω to the LED)</td><td>VIN</td></tr>
+          <tr><td>Transistor emitter, 10 kΩ pull-down</td><td>GND</td></tr>
+        </table>
+        <div class="sketch">
+          <svg viewBox="0 0 340 230" role="img" aria-label="VIN through 33 ohm resistor to the LED anode; LED cathode to the collector of an NPN transistor; D32 through 1 kilo-ohm to the base; 10 kilo-ohm from base to GND; emitter to GND">
+            <g class="w">
+              <path d="M250 18 V34"/>
+              <rect x="244" y="34" width="12" height="30" rx="2"/>
+              <path d="M250 64 V78"/>
+              <path d="M236 78 H264 L250 100 Z"/>
+              <path d="M236 100 H264"/>
+              <path d="M266 84 l12 -8 M270 92 l12 -8"/>
+              <path d="M250 100 V122"/>
+              <circle cx="244" cy="148" r="22"/>
+              <path d="M232 134 V162"/>
+              <path d="M232 142 L250 126 V122"/>
+              <path d="M232 154 L250 170 V196"/>
+              <path d="M244 166 L250 170 L243 172" />
+              <path d="M40 148 H90"/>
+              <rect x="90" y="142" width="34" height="12" rx="2"/>
+              <path d="M124 148 H232"/>
+              <path d="M180 148 V160"/>
+              <rect x="174" y="160" width="12" height="24" rx="2"/>
+              <path d="M180 184 V196"/>
+              <path d="M160 196 H270"/>
+              <path d="M200 206 H230 M206 213 H224"/>
+              <path d="M215 196 V206"/>
+            </g>
+            <circle cx="180" cy="148" r="3" fill="var(--fg)"/>
+            <text x="250" y="13" text-anchor="middle">VIN (5 V)</text>
+            <text x="262" y="54">33 Ω</text>
+            <text x="286" y="80">infrared</text>
+            <text x="286" y="94">LED</text>
+            <text x="200" y="74" text-anchor="end" class="soft">long leg</text>
+            <text x="200" y="113" text-anchor="end" class="soft">short leg</text>
+            <text x="272" y="146">NPN</text>
+            <text x="272" y="160" class="soft">2N2222 / BC547</text>
+            <text x="14" y="152">D32</text>
+            <text x="107" y="136" text-anchor="middle">1 kΩ</text>
+            <text x="192" y="176">10 kΩ</text>
+            <text x="240" y="226" text-anchor="middle">GND</text>
+          </svg>
+        </div>
+        <p class="note">About 100 mA pulses, normal for an infrared LED such as the TSAL6200. The 10 kΩ pull-down keeps the LED off while the board boots. Test with <code>ir send ac_on</code>; a phone camera shows the flash as purple.</p>
+      </article>
+
+      <article class="card" id="card-relay">
+        <div class="card-head"><span class="dot" style="background:var(--c-relay)"></span><h3>Fan relay</h3></div>
+        <table class="conn">
+          <tr><td>IN (through Q2)</td><td>D27</td></tr>
+          <tr><td>VCC</td><td>VIN (5 V)</td></tr>
+          <tr><td>GND</td><td>GND</td></tr>
+          <tr><td>Fan mains</td><td>COM + NC</td></tr>
+        </table>
+        <p class="note"><strong>Why the transistor:</strong> the module switches on when its input is low, through a transistor fed from 5 V. The ESP32's 3.3 V "high" leaves it half on (its LED glows dimly). Q2 pulls IN fully to 0 V for on, and R9 pulls it to a full 5 V for off. D27 high means relay on, so <code>RELAY_ACTIVE_LOW</code> is <code>false</code> in <code>include/config.h</code>.</p>
+        <p class="note"><strong>Test:</strong> after <code>fan off</code> the module's LED must be completely dark; after <code>fan on</code> the relay clicks. A module that switches on with a high input (NPN transistor such as S8050), or a solid-state relay with a 3–32 V input, needs no Q2: wire it straight to D27 and set <code>RELAY_ACTIVE_LOW false</code>.</p>
+        <p class="note"><strong>Fail-safe:</strong> the fan goes through COM and NC, so it runs whenever the relay is unpowered: if the board fails, crashes or loses power, the fan keeps the cabinet cool. The firmware energises the relay to switch the fan off (<code>FAN_ON_RELAY_NC true</code> in <code>include/config.h</code>), so the relay is held on most of the time: allow for its coil current, about 70 mA from 5 V. The fan also runs for a moment each time the ESP32 starts, until the firmware takes over. Use a mains-rated relay (typically 10 A, 250 V) inside an enclosure.</p>
+      </article>
+
+      <article class="card" id="card-power">
+        <div class="card-head"><span class="dot" style="background:var(--c-power)"></span><h3>Power and ground</h3></div>
+        <ul class="note">
+          <li><strong>One 3V3 pin</strong> (right column, bottom): wire both 3V3 runs from it. It powers the three sensors and the infrared receiver.</li>
+          <li><strong>VIN</strong> (left column, bottom): about 4.7 V when the board runs from USB, a computer port or a phone charger of at least 1 A. It feeds the infrared LED and the relay.</li>
+          <li><strong>Two GND pins</strong>, one per side, next to the power pins. Both feed the GND wires.</li>
+          <li>Use a short, decent USB cable and no unpowered hub; <code>status</code> shows <code>Last restart: brownout</code> if the supply sags.</li>
+        </ul>
+      </article>
+    </div>
+  </section>
+
+  <section class="warn" aria-labelledby="avoidTitle">
+    <h2 id="avoidTitle">Pins to leave alone</h2>
+    <ul>
+      <li><strong>D12, between D14 and D13.</strong> It sets the flash voltage when the board starts. Pulled high at boot, the board won't start. A slipped jumper wire here is the classic cause of a board that suddenly stops booting.</li>
+      <li><strong>D2, D5, D15</strong> also decide how the chip boots (D2 drives the on-board LED). Fine to leave unconnected.</li>
+      <li><strong>TX0 and RX0</strong> carry the USB console. Don't connect anything to them.</li>
+      <li><strong>D34, D35, VP, VN</strong> are input-only, so they can't drive the LED or the relay.</li>
+      <li>Free for later additions: D18, D19, D21, D22 (top row, near 3V3) and D13, D25, D26, D33 (bottom row). D14 sends a short signal at boot, so use it only for an input.</li>
+    </ul>
+  </section>
+
+  <footer>
+    References: <a href="https://randomnerdtutorials.com/esp32-pinout-reference-gpios/">ESP32 pinout reference</a> ·
+    <a href="https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html">Espressif DevKitC guide</a> ·
+    <a href="https://www.espressif.com/sites/default/files/documentation/esp32-wroom-32_datasheet_en.pdf">ESP32-WROOM-32 datasheet</a>
+  </footer>
+</div>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const el = (name, attrs, parent) => {
+    const n = document.createElementNS(NS, name);
+    for (const k in attrs) n.setAttribute(k, attrs[k]);
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const txt = (parent, x, y, s, attrs) => { const t = el("text", Object.assign({ x, y }, attrs || {}), parent); t.textContent = s; return t; };
+
+  /* ---------- Pinout ---------- */
+  const PARTS = {
+    cabinet: { name: "Cabinet temperature sensor", color: "var(--c-sensor)" },
+    room:    { name: "Room temperature sensor", color: "var(--c-room)" },
+    box:     { name: "Box temperature sensor", color: "var(--c-box)" },
+    irrx:    { name: "Infrared receiver", color: "var(--c-ir)" },
+    irled:   { name: "Infrared LED", color: "var(--c-ir)" },
+    relay:   { name: "Fan relay", color: "var(--c-relay)" },
+  };
+  const LEFT = [
+    { label: "EN",  gpio: null, kind: "avoid", info: "Reset. Pulling it low restarts the board, like the EN button." },
+    { label: "VP",  gpio: 36, kind: "input", info: "Input only." },
+    { label: "VN",  gpio: 39, kind: "input", info: "Input only." },
+    { label: "D34", gpio: 34, kind: "input", info: "Input only." },
+    { label: "D35", gpio: 35, kind: "input", info: "Input only." },
+    { label: "D32", gpio: 32, kind: "use", parts: ["irled"], tag: "LED circuit (1 kΩ → base)", info: "Switches the infrared LED through the transistor. PIN_IR_SEND in config.h." },
+    { label: "D33", gpio: 33, kind: "free", info: "Free." },
+    { label: "D25", gpio: 25, kind: "free",  info: "Free." },
+    { label: "D26", gpio: 26, kind: "free", info: "Free." },
+    { label: "D27", gpio: 27, kind: "use", parts: ["relay"], tag: "Relay (via Q2)", info: "Drives the fan relay through transistor Q2. PIN_RELAY in config.h." },
+    { label: "D14", gpio: 14, kind: "free", info: "Free. Sends a short signal while the board boots, so don't use it for an output." },
+    { label: "D12", gpio: 12, kind: "avoid", tag: "Leave free", info: "Sets the flash voltage at boot. Pulled high while starting, the board won't boot. Keep it unconnected." },
+    { label: "D13", gpio: 13, kind: "free", info: "Free." },
+    { label: "GND", gpio: null, kind: "gnd", parts: ["irled", "relay"], tag: "GND", info: "Ground. Both GND pins feed the ground wires; they are joined on the DevKit. The 470 µF capacitor and any extra ones sit right next to it." },
+    { label: "VIN", gpio: null, kind: "power", parts: ["irled", "relay"], tag: "5 V: infrared LED, relay", info: "About 4.7 V from USB. Feeds the infrared LED (through 33 Ω) and the relay module." },
+  ];
+  const RIGHT = [
+    { label: "D23", gpio: 23, kind: "use", parts: ["box"], tag: "Box sensor data", info: "Box temperature sensor data line (optional, shown in status only). PIN_DHT_BOX in config.h." },
+    { label: "D22", gpio: 22, kind: "free", info: "Free." },
+    { label: "TX0", gpio: 1,  kind: "avoid", info: "USB console transmit. Leave unconnected." },
+    { label: "RX0", gpio: 3,  kind: "avoid", info: "USB console receive. Leave unconnected." },
+    { label: "D21", gpio: 21, kind: "free", info: "Free." },
+    { label: "D19", gpio: 19, kind: "free", info: "Free." },
+    { label: "D18", gpio: 18, kind: "free", info: "Free." },
+    { label: "D5",  gpio: 5,  kind: "avoid", info: "Affects boot. Fine to leave unconnected." },
+    { label: "TX2", gpio: 17, kind: "use", parts: ["cabinet"], tag: "Cabinet sensor data", info: "Cabinet temperature sensor data line. PIN_DHT_CABINET in config.h. Free on WROOM modules (WROVER modules use it for PSRAM)." },
+    { label: "RX2", gpio: 16, kind: "use", parts: ["room"], tag: "Room sensor data", info: "Room temperature sensor data line (optional). PIN_DHT_ROOM in config.h. Free on WROOM modules (WROVER modules use it for PSRAM)." },
+    { label: "D4",  gpio: 4,  kind: "use", parts: ["irrx"], tag: "Infrared receiver OUT", info: "Infrared receiver output, on 3.3 V. PIN_IR_RECV in config.h." },
+    { label: "D2",  gpio: 2,  kind: "avoid", info: "Affects boot and drives the on-board LED. Leave unconnected." },
+    { label: "D15", gpio: 15, kind: "avoid", info: "Affects boot. Leave unconnected." },
+    { label: "GND", gpio: null, kind: "gnd", parts: ["cabinet", "room", "box", "irrx"], tag: "GND", info: "Ground. Both GND pins feed the ground wires; they are joined on the DevKit." },
+    { label: "3V3", gpio: null, kind: "power3", parts: ["cabinet", "room", "box", "irrx"], tag: "3.3 V: sensors, receiver", info: "The only 3.3 V pin. Powers the three temperature sensors and the infrared receiver (through 100 Ω)." },
+  ];
+  const KIND_COLOR = { power: "var(--c-power)", power3: "var(--c-3v3)", gnd: "var(--c-gnd)", avoid: "var(--c-avoid)" };
+  const KIND_STATE = { use: "Used", power: "5 V", power3: "3.3 V", gnd: "Ground", avoid: "Avoid", input: "Input only", free: "Free" };
+
+  const pinsLayer = document.getElementById("pins");
+  const all = [];
+  const Y0 = 274, STEP = 22;
+  const colorOf = p => p.kind === "use" ? PARTS[p.parts[0]].color : (KIND_COLOR[p.kind] || "var(--pin-idle)");
+
+  function drawSide(list, side) {
+    list.forEach((p, i) => {
+      const y = Y0 + i * STEP;
+      const px = side === "L" ? 196 : 364;
+      const g = el("g", { class: "pin", tabindex: "0", role: "button",
+        "aria-label": p.label + (p.gpio !== null ? " (GPIO " + p.gpio + ")" : "") + ": " + p.info }, pinsLayer);
+      el("title", {}, g).textContent = p.label + (p.gpio !== null ? " · GPIO " + p.gpio : "") + " — " + p.info;
+      if (p.tag) {
+        const c = colorOf(p);
+        const tagX = side === "L" ? 172 : 388;
+        el("path", { class: "wire", d: side === "L" ? `M${px - 7} ${y} H${tagX}` : `M${px + 7} ${y} H${tagX}`, stroke: c }, g);
+        const tg = el("g", { class: "tag" }, g);
+        const t = txt(tg, side === "L" ? tagX - 10 : tagX + 10, y + 4, p.tag, { "text-anchor": side === "L" ? "end" : "start", fill: "var(--fg)" });
+        Object.assign(p, { _tagText: t, _tagGroup: tg, _tagX: tagX, _side: side, _color: c, _y: y });
+      }
+      el("circle", { class: "pad", cx: px, cy: y, r: 7 }, g);
+      el("circle", { class: "hole", cx: px, cy: y, r: 3 }, g);
+      txt(g, side === "L" ? px + 13 : px - 13, y + 4, p.label, { class: "silk", "text-anchor": side === "L" ? "start" : "end" });
+      if (p.kind !== "free" && p.kind !== "input") el("circle", { cx: side === "L" ? px - 1 : px + 1, cy: y, r: 2.2, fill: colorOf(p) }, g);
+      p._g = g;
+      g.addEventListener("click", () => showPin(p));
+      g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); showPin(p); } });
+      all.push(p);
+    });
+  }
+  drawSide(LEFT, "L");
+  drawSide(RIGHT, "R");
+
+  function sizeTags() {
+    all.forEach(p => {
+      if (!p._tagText) return;
+      const old = p._tagGroup.querySelector("rect"); if (old) old.remove();
+      const w = p._tagText.getComputedTextLength() + 20;
+      const x = p._side === "L" ? p._tagX - w : p._tagX;
+      p._tagGroup.insertBefore(el("rect", { x, y: p._y - 11, width: w, height: 22, rx: 11, fill: "var(--surface)", stroke: p._color }), p._tagText);
+    });
+  }
+  sizeTags();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(sizeTags);
+
+  const partsBox = document.getElementById("parts");
+  const buttons = {};
+  Object.entries(PARTS).forEach(([key, part]) => {
+    const pins = all.filter(p => p.parts && p.parts.includes(key)).map(p => p.label);
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "part-btn"; b.setAttribute("aria-pressed", "false");
+    b.innerHTML = `<span class="dot" style="background:${part.color}"></span><span>${part.name}</span><span class="pins">${pins.join(" · ")}</span>`;
+    b.addEventListener("click", () => selectPart(b.getAttribute("aria-pressed") === "true" ? null : key));
+    partsBox.appendChild(b);
+    buttons[key] = b;
+  });
+  document.getElementById("showAll").addEventListener("click", () => selectPart(null));
+
+  const detail = document.getElementById("detail");
+  function setDetail(label, title, body, state, color) {
+    detail.innerHTML = "";
+    const add = (cls, text, tag) => { const n = document.createElement(tag || "div"); n.className = cls; n.textContent = text; detail.appendChild(n); return n; };
+    add("label", label);
+    add("title", title);
+    if (state) add("state", state, "span").style.color = color;
+    add("note", body, "p");
+  }
+  function selectPart(key) {
+    Object.entries(buttons).forEach(([k, b]) => b.setAttribute("aria-pressed", String(k === key)));
+    all.forEach(p => {
+      p._g.classList.toggle("dim", !(!key || (p.parts && p.parts.includes(key))));
+      p._g.classList.remove("on");
+    });
+    if (!key) return setDetail("Overview", "All connections", "Six signal pins, plus 3V3, VIN and the two GND pins. Pick a part to see only its wires, or tap a pin on the board.");
+    const pins = all.filter(p => p.parts && p.parts.includes(key));
+    setDetail("Part", PARTS[key].name, "Connects to " + pins.map(p => p.label).join(", ") + ". Wiring details are in its card below.");
+  }
+  function showPin(p) {
+    all.forEach(q => q._g.classList.toggle("on", q === p));
+    const used = p.parts ? "Used by: " + p.parts.map(k => PARTS[k].name).join(", ") + ". " : "";
+    setDetail("Pin", p.label + (p.gpio !== null ? " · GPIO " + p.gpio : ""), used + p.info, KIND_STATE[p.kind], colorOf(p));
+  }
+  selectPart(null);
+
+  /* ---------- Perfboard layout (data checked by layout.py) ---------- */
+  const L = {"cols": 24, "rows": 36, "parts": [{"ref": "H1", "kind": "header", "value": "top row", "pads": [[6, 12, "BOX", "D23"], [7, 12, "nc:D22", "D22"], [8, 12, "nc:TX0", "TX0"], [9, 12, "nc:RX0", "RX0"], [10, 12, "nc:D21", "D21"], [11, 12, "nc:D19", "D19"], [12, 12, "nc:D18", "D18"], [13, 12, "nc:D5", "D5"], [14, 12, "CAB", "TX2"], [15, 12, "ROOM", "RX2"], [16, 12, "IRRX", "D4"], [17, 12, "nc:D2", "D2"], [18, 12, "nc:D15", "D15"], [19, 12, "GND", "GND"], [20, 12, "3V3", "3V3"]]}, {"ref": "H2", "kind": "header", "value": "bottom row", "pads": [[6, 22, "nc:EN", "EN"], [7, 22, "nc:VP", "VP"], [8, 22, "nc:VN", "VN"], [9, 22, "nc:D34", "D34"], [10, 22, "nc:D35", "D35"], [11, 22, "IRSIG", "D32"], [12, 22, "nc:D33", "D33"], [13, 22, "nc:D25", "D25"], [14, 22, "nc:D26", "D26"], [15, 22, "RELAY", "D27"], [16, 22, "nc:D14", "D14"], [17, 22, "nc:D12", "D12"], [18, 22, "nc:D13", "D13"], [19, 22, "GND", "GND"], [20, 22, "5V", "VIN"]]}, {"ref": "J1", "kind": "conn", "value": "cabinet sensor", "pads": [[6, 2, "3V3", "3V3"], [7, 2, "CAB", "DATA"], [8, 2, "GND", "GND"]], "label": "left"}, {"ref": "R1", "kind": "res-stand", "value": "10k", "pads": [[6, 3, "3V3", ""], [7, 3, "CAB", ""]]}, {"ref": "J2", "kind": "conn", "value": "room sensor", "pads": [[10, 2, "3V3", "3V3"], [11, 2, "ROOM", "DATA"], [12, 2, "GND", "GND"]]}, {"ref": "R5", "kind": "res-stand", "value": "10k", "pads": [[10, 3, "3V3", ""], [11, 3, "ROOM", ""]]}, {"ref": "J6", "kind": "conn", "value": "box sensor", "pads": [[2, 2, "3V3", "3V3"], [3, 2, "BOX", "DATA"], [4, 2, "GND", "GND"]], "label": "left"}, {"ref": "R10", "kind": "res-stand", "value": "10k", "pads": [[2, 3, "3V3", ""], [3, 3, "BOX", ""]], "labelAt": [2.5, 4.2, "middle"]}, {"ref": "U1", "kind": "irrx", "value": "infrared receiver", "pads": [[24, 4, "IRRX", "OUT"], [24, 5, "GND", "GND"], [24, 6, "IRVCC", "VCC"]]}, {"ref": "C4", "kind": "cap", "value": "10µ", "pads": [[23, 7, "GND", ""], [24, 7, "IRVCC", ""]]}, {"ref": "R6", "kind": "res", "value": "100Ω", "pads": [[24, 8, "IRVCC", ""], [24, 12, "3V3", ""]]}, {"ref": "R2", "kind": "res", "value": "1k", "pads": [[11, 23, "IRSIG", ""], [11, 27, "BASE", ""]], "bridges": [[11, 24], [11, 26]]}, {"ref": "R3", "kind": "res-stand", "value": "10k", "pads": [[11, 28, "BASE", ""], [10, 28, "GND", ""]], "labelAt": [9.4, 28, "end"]}, {"ref": "Q1", "kind": "npn", "value": "2N2222", "pads": [[10, 29, "GND", "E"], [11, 29, "BASE", "B"], [12, 29, "COLL", "C"]], "labelAt": [11, 30.8, "middle"]}, {"ref": "J4", "kind": "conn5", "value": "infrared LED", "pads": [[11, 33, "LEDP", "LED+"], [12, 33, "COLL", "LED−"]], "label": "left"}, {"ref": "R4", "kind": "res", "value": "33Ω", "pads": [[16, 24, "LEDP", ""], [20, 24, "5V", ""]], "bridges": [[17, 24], [18, 24], [19, 24]]}, {"ref": "R7", "kind": "res", "value": "1k", "pads": [[15, 23, "RELAY", ""], [15, 27, "RBASE", ""]], "bridges": [[15, 24], [15, 26]]}, {"ref": "R8", "kind": "res-stand", "value": "10k", "pads": [[15, 28, "RBASE", ""], [14, 28, "GND", ""]], "labelAt": [16.4, 28, "start"]}, {"ref": "Q2", "kind": "npn", "value": "2N2222", "pads": [[14, 29, "GND", "E"], [15, 29, "RBASE", "B"], [16, 29, "RIN", "C"]], "labelAt": [15, 30.8, "middle"]}, {"ref": "R9", "kind": "res", "value": "10k", "pads": [[16, 31, "RIN", ""], [20, 31, "5V", ""]], "bridges": [[17, 31], [18, 31], [19, 31]]}, {"ref": "J5", "kind": "conn5", "value": "relay", "pads": [[18, 34, "RIN", "IN"], [19, 34, "GND", "GND"], [20, 34, "5V", "5V"]]}, {"ref": "C1", "kind": "elco", "value": "470µ", "pads": [[20, 25, "5V", "+"], [19, 25, "GND", "−"]]}], "wires": [{"net": "CAB", "side": "top", "pts": [[14, 12], [14, 8], [7, 8], [7, 3], [7, 2]]}, {"net": "ROOM", "side": "top", "pts": [[15, 12], [15, 6], [11, 6], [11, 3], [11, 2]]}, {"net": "BOX", "side": "top", "pts": [[6, 12], [6, 5], [3, 5], [3, 3], [3, 2]]}, {"net": "IRRX", "side": "top", "pts": [[16, 12], [16, 3], [24, 3], [24, 4]]}, {"net": "IRVCC", "side": "top", "pts": [[24, 6], [24, 7], [24, 8]]}, {"net": "GND", "side": "top", "pts": [[19, 9], [23, 9], [23, 7], [23, 5], [24, 5]]}, {"net": "3V3", "side": "under", "pts": [[20, 12], [20, 1], [10, 1], [6, 1], [6, 2], [6, 3]]}, {"net": "3V3", "side": "under", "pts": [[10, 1], [10, 2], [10, 3]]}, {"net": "3V3", "side": "under", "pts": [[6, 1], [2, 1], [2, 2], [2, 3]]}, {"net": "3V3", "side": "under", "pts": [[20, 12], [24, 12]]}, {"net": "GND", "side": "under", "pts": [[19, 12], [19, 9], [19, 4], [12, 4], [8, 4]]}, {"net": "GND", "side": "under", "pts": [[12, 4], [12, 2]]}, {"net": "GND", "side": "under", "pts": [[8, 4], [8, 2]]}, {"net": "GND", "side": "under", "pts": [[8, 4], [4, 4], [4, 2]]}, {"net": "IRSIG", "side": "top", "pts": [[11, 22], [11, 23]]}, {"net": "BASE", "side": "top", "pts": [[11, 27], [11, 28], [11, 29]]}, {"net": "COLL", "side": "top", "pts": [[12, 29], [12, 33]]}, {"net": "LEDP", "side": "top", "pts": [[16, 24], [6, 24], [6, 32], [11, 32], [11, 33]]}, {"net": "RELAY", "side": "top", "pts": [[15, 22], [15, 23]]}, {"net": "RBASE", "side": "top", "pts": [[15, 27], [15, 28], [15, 29]]}, {"net": "RIN", "side": "top", "pts": [[16, 29], [16, 31], [16, 33], [18, 33], [18, 34]]}, {"net": "5V", "side": "top", "pts": [[20, 22], [20, 24], [20, 25], [20, 31], [20, 34]]}, {"net": "GND", "side": "top", "pts": [[19, 22], [19, 25], [19, 26], [19, 34]]}, {"net": "GND", "side": "top", "pts": [[19, 26], [14, 26], [10, 26]]}, {"net": "GND", "side": "top", "pts": [[10, 26], [10, 28], [10, 29]]}, {"net": "GND", "side": "top", "pts": [[14, 26], [14, 28], [14, 29]]}]};
+  let plan = document.getElementById("plan");
+  const P = 18, BX = 220, BY = 112;
+  const X = c => BX + (c - 0.5) * P;
+  const Y = r => BY + (r - 0.5) * P;
+  const NET = { "3V3": "var(--c-3v3)", "5V": "var(--c-power)", "GND": "var(--c-gnd)", CAB: "var(--c-sensor)", ROOM: "var(--c-room)", BOX: "var(--c-box)",
+    IRRX: "var(--c-ir)", IRVCC: "var(--c-3v3)", IRSIG: "var(--c-ir)", BASE: "var(--c-ir)", COLL: "var(--c-ir)", LEDP: "var(--c-ir)", RELAY: "var(--c-relay)", RBASE: "var(--c-relay)", RIN: "var(--c-relay)" };
+  const netColor = n => NET[n] || "var(--pin-idle)";
+
+  const defs = el("defs", {}, plan);
+  const holes = el("pattern", { id: "holes", width: P, height: P, patternUnits: "userSpaceOnUse", x: BX, y: BY }, defs);
+  el("circle", { cx: P / 2, cy: P / 2, r: 1.7, fill: "var(--perf-hole)" }, holes);
+  const hatch = el("pattern", { id: "hatch", width: 8, height: 8, patternUnits: "userSpaceOnUse", patternTransform: "rotate(45)" }, defs);
+  el("line", { x1: 0, y1: 0, x2: 0, y2: 8, stroke: "var(--c-avoid)", "stroke-width": 2, opacity: .5 }, hatch);
+
+  el("rect", { x: BX, y: BY, width: L.cols * P, height: L.rows * P, rx: 6, fill: "var(--perf)", stroke: "var(--perf-edge)", "stroke-width": 2 }, plan);
+  el("rect", { x: BX, y: BY, width: L.cols * P, height: L.rows * P, rx: 6, fill: "url(#holes)" }, plan);
+  for (let c = 1; c <= L.cols; c += 5) txt(plan, X(c), BY + L.rows * P + 13, String(c), { "font-size": 8.5, fill: "var(--muted)", "text-anchor": "middle" });
+  for (let r = 1; r <= L.rows; r += 5) txt(plan, BX - 6, Y(r) + 3, String(r), { "font-size": 8.5, fill: "var(--muted)", "text-anchor": "end" });
+
+  // antenna keep-out (columns 1-4, rows 9-24)
+  el("rect", { x: BX, y: Y(9) - P / 2, width: 4 * P, height: 16 * P, fill: "url(#hatch)", stroke: "var(--c-avoid)", "stroke-dasharray": "4 3", "stroke-width": 1.2 }, plan);
+  const ko = txt(plan, 0, 0, "antenna · keep clear", { "font-size": 10.5, "font-weight": 600, fill: "var(--c-avoid)", "text-anchor": "middle" });
+  ko.setAttribute("transform", `translate(${BX + 2 * P + 4} ${Y(16.5)}) rotate(-90)`);
+
+  // DevKit outline (plugged in above the board)
+  el("rect", { x: BX + 0.2 * P, y: Y(11.2), width: 22.4 * P, height: Y(22.8) - Y(11.2), rx: 5, fill: "var(--board)", "fill-opacity": .14,
+    stroke: "var(--board)", "stroke-width": 1.5, "stroke-dasharray": "6 4" }, plan);
+  el("rect", { x: X(22.2), y: Y(15.6), width: 2.6 * P, height: Y(18.4) - Y(15.6), rx: 3, fill: "var(--shield)", stroke: "var(--shield-edge)" }, plan);
+  txt(plan, X(23.5), Y(17.2), "USB", { "font-size": 8.5, "font-weight": 600, fill: "var(--board-edge)", "text-anchor": "middle" });
+  txt(plan, X(9), Y(17.3), "ESP32 DevKit, plugged in from above", { "font-size": 10, fill: "var(--muted)", "text-anchor": "middle" });
+
+  // space kept free for extra supply capacitors: GND on column 19, 5 V on column 20
+  el("rect", { x: X(19) - P / 2 + 2, y: Y(27) - P / 2 + 2, width: 2 * P - 4, height: 3 * P - 4, rx: 4, fill: "var(--c-power)", "fill-opacity": .08,
+    stroke: "var(--c-power)", "stroke-width": 1.4, "stroke-dasharray": "4 3" }, plan);
+  txt(plan, BX + L.cols * P + 28, Y(27.6), "room for extra", { "font-size": 10.5, fill: "var(--muted)" });
+  txt(plan, BX + L.cols * P + 28, Y(28.8), "5 V capacitors", { "font-size": 10.5, fill: "var(--muted)" });
+  el("line", { x1: X(20) + P / 2, y1: Y(28), x2: BX + L.cols * P + 24, y2: Y(28), stroke: "var(--muted)", "stroke-width": 1.5 }, plan);
+
+  // wires underneath first, then on top
+  const pathOf = pts => "M" + pts.map(([c, r]) => `${X(c)} ${Y(r)}`).join(" L");
+  // optional parts and their wires (the on-board receiver) are drawn faint
+  const OPT = .38;
+  L.wires.filter(w => w.side === "under").forEach(w =>
+    el("path", { d: pathOf(w.pts), stroke: netColor(w.net), "stroke-width": 2.2, "stroke-dasharray": "5 3", fill: "none",
+      "stroke-linejoin": "round", "stroke-linecap": "round", opacity: w.optional ? OPT : .9 }, plan));
+  L.wires.filter(w => w.side === "top").forEach(w => {
+    const g = w.optional ? el("g", { opacity: OPT }, plan) : plan;
+    el("path", { d: pathOf(w.pts), stroke: "var(--perf)", "stroke-width": 6, fill: "none", "stroke-linejoin": "round" }, g);
+    el("path", { d: pathOf(w.pts), stroke: netColor(w.net), "stroke-width": 2.6, fill: "none", "stroke-linejoin": "round", "stroke-linecap": "round" }, g);
+  });
+
+  // parts
+  const label = (x, y, s, color, anchor) => txt(plan, x, y, s, { class: x < BX + L.cols * P ? "halo" : "", "font-size": 11, "font-weight": 700, fill: color || "var(--fg)", "text-anchor": anchor || "middle" });
+  // nets that only optional parts use (the on-board receiver): their header pins are drawn faint
+  const optNets = new Set(L.wires.filter(w => w.optional).map(w => w.net));
+  L.wires.forEach(w => { if (!w.optional) optNets.delete(w.net); });
+  L.parts.forEach(p => { if (!p.optional && p.kind !== "header") p.pads.forEach(([, , n]) => optNets.delete(n)); });
+  const drawPart = p => {
+    const pads = p.pads;
+    if (p.kind === "header") {
+      const r = pads[0][1];
+      el("rect", { x: X(pads[0][0]) - 8, y: Y(r) - 8, width: (pads.length - 1) * P + 16, height: 16, rx: 2, fill: "var(--board-edge)" }, plan);
+      pads.forEach(([c, rr, net, name]) => {
+        const used = !net.startsWith("nc:");
+        el("rect", { x: X(c) - 4.5, y: Y(rr) - 4.5, width: 9, height: 9, fill: used ? netColor(net) : "var(--pin-idle)", opacity: !used ? .55 : optNets.has(net) ? OPT : 1 }, plan);
+        if (used || name === "D12") {
+          // vertical labels: below the top row (into the DevKit area), above the bottom row
+          const t = txt(plan, 0, 0, name, { "font-size": 10, "font-weight": 700, opacity: optNets.has(net) ? OPT : 1,
+            fill: name === "D12" ? "var(--c-avoid)" : "var(--fg)", "text-anchor": r === 12 ? "end" : "start" });
+          t.setAttribute("transform", `translate(${X(c) + 3.5} ${r === 12 ? Y(rr) + 11 : Y(rr) - 11}) rotate(-90)`);
+        }
+      });
+      return;
+    }
+    if (p.kind === "irrx") {
+      const x0 = X(pads[0][0]) + 5, y0 = Y(pads[0][1]) - 8, y1 = Y(pads[2][1]) + 8;
+      pads.forEach(([c, r]) => el("line", { x1: X(c), y1: Y(r), x2: x0, y2: Y(r), stroke: "var(--shield-edge)", "stroke-width": 1.6 }, plan));
+      el("rect", { x: x0, y: y0, width: 12, height: y1 - y0, rx: 2, style: "fill:var(--to92);stroke:var(--to92-edge);stroke-width:1" }, plan);
+      el("path", { d: `M${x0 + 12} ${Y(pads[1][1]) - 8} A 8 8 0 0 1 ${x0 + 12} ${Y(pads[1][1]) + 8} Z`, style: "fill:var(--to92);stroke:var(--to92-edge);stroke-width:1" }, plan);
+      pads.forEach(([c, r, net, name]) => txt(plan, x0 + 26, Y(r) + 3.5, name, { "font-size": 9, "font-weight": 700, fill: "var(--fg)" }));
+      label(x0 + 52, Y(pads[0][1]) + 3, p.ref, "var(--c-ir)", "start");
+      txt(plan, x0 + 52, Y(pads[1][1]) + 3.5, p.optional ? "optional: receiver" : "infrared receiver,", { "font-size": 10, fill: "var(--muted)" });
+      txt(plan, x0 + 52, Y(pads[2][1]) + 3.5, p.optional ? "on this board (D4)" : "faces this edge", { "font-size": 10, fill: "var(--muted)" });
+      return;
+    }
+    if (p.kind === "cap") {
+      const [a, b] = pads;
+      el("line", { x1: X(a[0]), y1: Y(a[1]), x2: X(b[0]), y2: Y(b[1]), stroke: "var(--shield-edge)", "stroke-width": 1.6 }, plan);
+      el("rect", { x: (X(a[0]) + X(b[0])) / 2 - 6, y: Y(a[1]) - 5, width: 12, height: 10, rx: 3, style: "fill:var(--elco);stroke:var(--elco-edge);stroke-width:1" }, plan);
+      label(X(a[0]) - 8, Y(a[1]) + 4, p.ref + " " + p.value, "var(--fg)", "end");
+      return;
+    }
+    if (p.kind === "conn" || p.kind === "conn5") {
+      const [c0, r0] = pads[0], cN = pads[pads.length - 1][0];
+      el("rect", { x: X(c0) - 8, y: Y(r0) - 8, width: (cN - c0) * P + 16, height: 16, rx: 2, fill: "var(--surface)",
+        stroke: p.kind === "conn5" ? "var(--c-power)" : "var(--fg)", "stroke-width": p.kind === "conn5" ? 2.2 : 1.4 }, plan);
+      pads.forEach(([c, r, net, name]) => {
+        el("rect", { x: X(c) - 2.5, y: Y(r) - 2.5, width: 5, height: 5, fill: netColor(net) }, plan);
+        const t = txt(plan, 0, 0, name, { class: "halo", "font-size": 9, "font-weight": 600, fill: "var(--fg)", "text-anchor": r0 < 10 ? "start" : "end" });
+        t.setAttribute("transform", `translate(${X(c) + 3} ${r0 < 10 ? Y(r) - 11 : Y(r) + 11}) rotate(-90)`);
+      });
+      if (p.label === "left") label(X(c0) - 13, Y(r0) + 4, p.ref, p.kind === "conn5" ? "var(--c-power)" : "var(--fg)", "end");
+      else label(X(cN) + 13, Y(r0) + 4, p.ref, p.kind === "conn5" ? "var(--c-power)" : "var(--fg)", "start");
+      return;
+    }
+    const [a, b] = pads;
+    const ax = X(a[0]), ay = Y(a[1]), bx = X(b[0]), by = Y(b[1]);
+    if (p.kind === "res") {
+      el("line", { x1: ax, y1: ay, x2: bx, y2: by, stroke: "var(--shield-edge)", "stroke-width": 1.6 }, plan);
+      const horiz = ay === by, len = Math.hypot(bx - ax, by - ay), body = Math.min(len - 10, 30);
+      const cx = (ax + bx) / 2, cy = (ay + by) / 2;
+      el("rect", horiz ? { x: cx - body / 2, y: cy - 5, width: body, height: 10, rx: 4 } : { x: cx - 5, y: cy - body / 2, width: 10, height: body, rx: 4 },
+        plan).setAttribute("style", "fill:var(--res-body);stroke:var(--res-edge);stroke-width:1");
+      if (p.labelAt) label(X(p.labelAt[0]), Y(p.labelAt[1]) + 3, p.ref + " " + p.value, "var(--fg)", p.labelAt[2]);
+      else label(horiz ? cx : cx + 11, horiz ? cy - 9 : cy + 3, p.ref + " " + p.value, "var(--fg)", horiz ? "middle" : "start");
+    } else if (p.kind === "res-stand") {
+      // standing resistor seen from above: the same banded body as a lying one, drawn
+      // across its two holes, so it can't be mistaken for a wire
+      const cx = (ax + bx) / 2, cy = (ay + by) / 2;
+      el("line", { x1: ax, y1: ay, x2: bx, y2: by, stroke: "var(--shield-edge)", "stroke-width": 1.6 }, plan);
+      el("rect", { x: cx - 12, y: cy - 6, width: 24, height: 12, rx: 5, style: "fill:var(--res-body);stroke:var(--res-edge);stroke-width:1" }, plan);
+      [-6, -2, 2].forEach(dx => el("rect", { x: cx + dx - 1, y: cy - 6, width: 2.2, height: 12, fill: "var(--res-edge)" }, plan));
+      if (p.labelAt) label(X(p.labelAt[0]), Y(p.labelAt[1]) + 3, p.ref + " " + p.value, "var(--fg)", p.labelAt[2]);
+      else label(ax - 9, ay + 3, p.ref + " " + p.value, "var(--fg)", "end");
+    } else if (p.kind === "elco") {
+      const cx = (ax + bx) / 2, cy = ay;
+      el("circle", { cx, cy, r: 11, style: "fill:var(--elco);stroke:var(--elco-edge);stroke-width:1" }, plan);
+      // the stripe marks the − leg (second pad), on whichever side that is
+      const sx = Math.sign(bx - ax);
+      el("path", { d: `M${cx + 4 * sx} ${cy - 10.2} A 11 11 0 0 ${sx > 0 ? 1 : 0} ${cx + 4 * sx} ${cy + 10.2}`, stroke: "var(--elco-stripe)", "stroke-width": 3, fill: "none" }, plan);
+      txt(plan, ax, cy + 3, "+", { "font-size": 10, "font-weight": 700, fill: "var(--on-dark)", "text-anchor": "middle" });
+      label(cx + 15, cy - 2, p.ref, "var(--fg)", "start");
+      label(cx + 15, cy + 10, p.value, "var(--fg)", "start");
+    } else if (p.kind === "diode") {
+      // axial diode: dark body, light band at the cathode (pad named K)
+      el("line", { x1: ax, y1: ay, x2: bx, y2: by, stroke: "var(--shield-edge)", "stroke-width": 1.6 }, plan);
+      const horiz = ay === by, cx = (ax + bx) / 2, cy = (ay + by) / 2, len = 22;
+      el("rect", horiz ? { x: cx - len / 2, y: cy - 4.5, width: len, height: 9, rx: 3 } : { x: cx - 4.5, y: cy - len / 2, width: 9, height: len, rx: 3 },
+        plan).setAttribute("style", "fill:var(--to92);stroke:var(--to92-edge);stroke-width:1");
+      const k = b[3] === "K" ? 1 : -1;  // band toward the cathode pad
+      el("rect", horiz ? { x: cx + k * (len / 2 - 5) - 1.5, y: cy - 4.5, width: 3, height: 9 } : { x: cx - 4.5, y: cy + k * (len / 2 - 5) - 1.5, width: 9, height: 3 },
+        plan).setAttribute("style", "fill:var(--elco-stripe)");
+      label(horiz ? cx : cx + 10, horiz ? cy - 8 : cy + 3, p.ref, "var(--fg)", horiz ? "middle" : "start");
+    } else if (p.kind === "npn") {
+      const [e, base, c] = pads;
+      const x1 = X(e[0]) - 6, x2 = X(c[0]) + 6, y = Y(e[1]);
+      const turned = e[3] === "C";  // C-B-E from the left: flat side away from you
+      el("path", { d: turned ? `M${x1} ${y - 4} L${x2} ${y - 4} A ${(x2 - x1) / 2} 12 0 0 1 ${x1} ${y - 4} Z`
+                             : `M${x1} ${y + 4} L${x2} ${y + 4} A ${(x2 - x1) / 2} 12 0 0 0 ${x1} ${y + 4} Z`,
+        style: "fill:var(--to92);stroke:var(--to92-edge);stroke-width:1" }, plan);
+      pads.forEach(([cc, rr, net, name]) => txt(plan, X(cc), turned ? Y(rr) - 8 : Y(rr) + 15, name, { class: "halo", "font-size": 8.5, "font-weight": 700, fill: "var(--fg)", "text-anchor": "middle" }));
+      if (p.labelAt) {
+        label(X(p.labelAt[0]), Y(p.labelAt[1]) + 3, p.ref, "var(--fg)", p.labelAt[2]);
+        label(X(p.labelAt[0]), Y(p.labelAt[1]) + 15, p.value, "var(--fg)", p.labelAt[2]);
+      } else {
+        label(x1 - 5, y - 2, p.ref, "var(--fg)", "end");
+        label(x1 - 5, y + 10, p.value, "var(--fg)", "end");
+      }
+    }
+  };
+  L.parts.forEach(p => {
+    const base = plan;
+    if (p.optional) plan = el("g", { opacity: OPT }, base);
+    drawPart(p);
+    plan = base;
+  });
+
+  // insulated jumpers, raised above wires and parts
+  L.wires.filter(w => w.side === "bridge").forEach(w => {
+    el("path", { d: pathOf(w.pts), stroke: "var(--surface)", "stroke-width": 7, fill: "none", "stroke-linecap": "round" }, plan);
+    el("path", { d: pathOf(w.pts), stroke: netColor(w.net), "stroke-width": 3, fill: "none", "stroke-linecap": "round" }, plan);
+    el("path", { d: pathOf(w.pts), stroke: "var(--surface)", "stroke-width": 1, "stroke-dasharray": "2 3", fill: "none" }, plan);
+  });
+
+  // solder joints: every pad and wire corner
+  const seen = new Set();
+  const dot = (c, r, net, opt) => { const k = c + "," + r; if (seen.has(k)) return; seen.add(k);
+    el("circle", { cx: X(c), cy: Y(r), r: 2.6, fill: "var(--fg)", opacity: opt ? OPT : 1 }, plan); };
+  for (const opt of [false, true]) {
+    L.parts.forEach(p => { if (p.kind !== "header" && !!p.optional === opt) p.pads.forEach(([c, r, net]) => dot(c, r, net, opt)); });
+    L.wires.forEach(w => { if (!!w.optional === opt) w.pts.forEach(([c, r]) => dot(c, r, w.net, opt)); });
+  }
+  L.parts.filter(p => p.kind === "header").forEach(p => p.pads.forEach(([c, r, net]) => { if (!net.startsWith("nc:") && L.wires.some(w => w.pts.some(([wc, wr]) => wc === c && wr === r))) dot(c, r, net); }));
+
+  // cables to the parts off the board
+  const dest = (x, y, w, lines, color) => {
+    el("rect", { x, y, width: w, height: 16 + lines.length * 14, rx: 7, fill: "var(--surface)", stroke: color, "stroke-width": 1.6 }, plan);
+    lines.forEach((l, i) => txt(plan, x + 10, y + 19 + i * 14, l, { "font-size": i === 0 ? 11.5 : 10.5, "font-weight": i === 0 ? 700 : 400, fill: i === 0 ? color : "var(--muted)" }));
+  };
+  const cable = (pts, color) => el("path", { d: "M" + pts.map(q => q.join(" ")).join(" L"), stroke: color, "stroke-width": 3, fill: "none",
+    "stroke-linejoin": "round", "stroke-linecap": "round", opacity: .8 }, plan);
+  const top = BY, bot = BY + L.rows * P;
+  cable([[X(7), top], [X(7), top - 18], [140, top - 36], [140, 60]], "var(--c-sensor)");
+  dest(40, 14, 196, ["Cabinet sensor (J1)", "inside the cabinet · ≤ 1 m"], "var(--c-sensor)");
+  cable([[X(11), top], [X(11), top - 18], [X(11) + 70, top - 36], [X(11) + 70, 60]], "var(--c-room)");
+  dest(X(11) - 10, 14, 220, ["Room sensor (J2)", "room air, away from fan · ≤ 2 m"], "var(--c-room)");
+  cable([[X(3), top], [X(3), top - 8], [196, top - 8]], "var(--c-box)");
+  dest(6, top - 22, 190, ["Box sensor (J6)", "inside the box, away from", "the ESP32 · short lead"], "var(--c-box)");
+  const boxY = bot + 62;
+  cable([[X(13), bot], [X(13), bot + 22], [X(13) - 150, bot + 44], [X(13) - 150, boxY]], "var(--c-ir)");
+  dest(X(13) - 260, boxY, 230, ["Infrared LED (J4)", "facing the air", "conditioner · ≤ 2 m"], "var(--c-ir)");
+  cable([[X(19), bot], [X(19), bot + 22], [X(19) + 110, bot + 44], [X(20) + 110, boxY]], "var(--c-relay)");
+  dest(X(19) + 20, boxY, 190, ["Relay module (J5)", "own compartment with", "the mains · ≤ 1 m"], "var(--c-relay)");
+  txt(plan, BX + L.cols * P + 28, Y(16.6), "USB: computer or", { "font-size": 10.5, fill: "var(--muted)" });
+  txt(plan, BX + L.cols * P + 28, Y(17.8), "phone charger (≥ 1 A)", { "font-size": 10.5, fill: "var(--muted)" });
+  el("line", { x1: BX + L.cols * P + 8, y1: Y(17), x2: BX + L.cols * P + 24, y2: Y(17), stroke: "var(--muted)", "stroke-width": 1.5 }, plan);
+})();
+</script>
+
+</body></html>
