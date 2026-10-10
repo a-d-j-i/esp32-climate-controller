@@ -204,7 +204,10 @@ static CmdResult cmdStatus(const Args& a, const Out& out) {
        forceText(st.fanForce, s.fanOnAbove, s.fanOffBelow) + "\n";
   o += String("Mode              ") + mode + "\n";
   o += fmt("Rules             fan on at %.1f °C or more, off at %.1f °C or less\n", s.fanOnAbove, s.fanOffBelow);
-  if (s.fanUseRoom) o += fmt("                  (only when the room is at least %.1f °C cooler, or unknown)\n", s.fanRoomMargin);
+  if (s.fanMinOnMin) o += fmt("                  once started, the fan runs at least %lu min\n", (unsigned long)s.fanMinOnMin);
+  if (s.fanUseRoom)
+    o += fmt("                  (only when the room is at least %.1f °C cooler to start, more than %.1f °C\n"
+             "                  to keep running, or unknown)\n", s.fanRoomMargin, s.fanRoomStop);
   o += fmt("                  air conditioner on at %.1f °C or more, off at %.1f °C or less\n",
            s.acOnAbove, s.acOffBelow);
   o += "                  the fan is off while the air conditioner is on\n";

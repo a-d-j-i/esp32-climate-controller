@@ -185,20 +185,37 @@ static void write(ssh_channel chan, bool pty, const String& text) {
   ssh_channel_write(chan, t.c_str(), t.length());
 }
 
+static uint32_t sshIdleMinutes() {
+  Lock lk(g_lock);
+  return g_settings.sshIdleMin;
+}
+
+// Lets the network stack notice a client that disappeared without closing the
+// connection; reads then fail and the session ends (see SSH_KEEPALIVE_* in config.h).
+static void enableKeepalive(ssh_session session) {
+  int fd = ssh_get_fd(session);
+  int on = 1, idle = SSH_KEEPALIVE_IDLE_S, interval = SSH_KEEPALIVE_INTERVAL_S, count = SSH_KEEPALIVE_COUNT;
+  setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof on);
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPIDLE, &idle, sizeof idle);
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPINTVL, &interval, sizeof interval);
+  setsockopt(fd, IPPROTO_TCP, TCP_KEEPCNT, &count, sizeof count);
+}
+
 static void runInteractive(ssh_channel chan, bool pty) {
   // Without a terminal (ssh -T) the client echoes and sends whole lines, so there is
   // no line editing and live lines are simply printed.
   ConsoleSession session(Console::Ssh, pty, [&](const String& s) { write(chan, pty, s); });
   session.start();
-  uint32_t lastActivity = millis();
+  uint32_t lastActivity = millis();  // typing only: output such as watch lines does not count
   char buf[128];
   for (;;) {
     int n = ssh_channel_read_timeout(chan, buf, sizeof buf, 0, 100);
     if (n == SSH_ERROR || ssh_channel_is_eof(chan) || ssh_channel_is_closed(chan)) return;
+    uint32_t idleMin = sshIdleMinutes();
     if (n > 0) {
       lastActivity = millis();
       if (!session.feed(buf, n)) return;
-    } else if (millis() - lastActivity > SSH_IDLE_TIMEOUT_MS) {
+    } else if (idleMin && millis() - lastActivity > idleMin * 60000UL) {
       session.poll();
       write(chan, pty, "\nidle timeout\n");
       return;
@@ -230,6 +247,7 @@ static void runExec(ssh_channel chan, bool pty, const String& command) {
 
 static void handleSession(ssh_session session) {
   String peer = peerAddress(session);
+  enableKeepalive(session);
   uint32_t deadline = millis() + SSH_LOGIN_TIMEOUT_S * 1000UL;
   armTimeout(session, deadline);
   if (ssh_handle_key_exchange(session) != SSH_OK) {

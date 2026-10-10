@@ -85,14 +85,7 @@ static String compactStatus() {
     s = g_settings;
     st = g_status;
   }
-  // Each sensor's temperature, or "off" while it isn't answering (`status` says why).
-  String o;
-  for (SensorId id : {SensorId::Cabinet, SensorId::Room, SensorId::Box}) {
-    SensorInfo info = controlSensorInfo(id);
-    if (o.length()) o += " · ";
-    o += sensorName(id);
-    o += info.fresh ? String(" ") + String(info.reading.temperature, 1) + " °C" : String(": off");
-  }
+  String o = sensorReadings();  // `status` says why a sensor is off
   o += String(" · ac ") + (!st.acKnown ? "unknown" : st.acOn ? "on" : "off");
   if (st.acForce.active) o += " (forced)";
   o += String(" · fan ") + (st.fanOn ? "on" : "off");

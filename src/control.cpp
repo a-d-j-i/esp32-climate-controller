@@ -71,6 +71,17 @@ SensorInfo controlSensorInfo(SensorId id) {
   return info;
 }
 
+String sensorReadings() {
+  String o;
+  for (SensorId id : {SensorId::Cabinet, SensorId::Room, SensorId::Box}) {
+    SensorInfo info = controlSensorInfo(id);
+    if (o.length()) o += " · ";
+    o += sensorName(id);
+    o += info.fresh ? String(" ") + String(info.reading.temperature, 1) + " °C" : String(": off");
+  }
+  return o;
+}
+
 String sensorSummary(const SensorInfo& info) {
   String model = info.reading.model ? "DHT" + String(info.reading.model) + ", " : String();
   switch (info.state) {
@@ -172,17 +183,16 @@ static void runAuto() {
   if (s.mode != Mode::Auto || !controlSensorFresh()) return;
   float t = st.cabinet.temperature;
   uint32_t now = millis();
-  char reason[64];
-  snprintf(reason, sizeof reason, "auto, %.1f °C", t);
+  const char* reason = "auto";  // the log line adds the temperatures
   checkForce(st.acForce, "air conditioner", t, s.acOnAbove, s.acOffBelow, now);
   checkForce(st.fanForce, "fan", t, s.fanOnAbove, s.fanOffBelow, now);
 
   bool fanCanHelp = true;
   if (s.fanUseRoom && readingFresh(st.room)) {
-    // Start only with a clear margin; keep running while the room is still cooler.
+    // Start only with a clear margin; keep running while the room is still clearly
+    // cooler, so a cabinet that levels off just above the room lets the fan stop.
     float diff = t - st.room.temperature;
-    fanCanHelp = st.fanOn ? diff > 0 : diff >= s.fanRoomMargin;
-    snprintf(reason, sizeof reason, "auto, cabinet %.1f °C, room %.1f °C", t, st.room.temperature);
+    fanCanHelp = st.fanOn ? diff > s.fanRoomStop : diff >= s.fanRoomMargin;
   }
   // Hysteresis: once on, stay on until the lower threshold. With an unknown state
   // (after boot) send whichever code the temperature calls for. A force was applied
@@ -198,6 +208,11 @@ static void runAuto() {
 
   bool acRunning = st.acKnown && st.acOn;
   bool fanCalledFor = st.fanOn ? t > s.fanOffBelow : t >= s.fanOnAbove;
+  // A minimum run time, so a cabinet that heats quickly doesn't cycle the fan every few
+  // minutes. It only postpones the temperature stop: a room that is no longer cooler
+  // and the air conditioner still stop the fan at once. There is no minimum off time,
+  // which would let the cabinet overheat while the fan waits.
+  if (st.fanOn && s.fanMinOnMin && now - st.fanOnSinceMs < s.fanMinOnMin * 60000UL) fanCalledFor = true;
   bool wantFan = st.fanForce.active ? st.fanForce.on : fanCanHelp && fanCalledFor;
   wantFan = wantFan && !acRunning;
   if (wantFan != st.fanOn) setFan(wantFan, reason);
@@ -279,7 +294,7 @@ bool setAc(bool on, const char* reason, String* errOut) {
   g_status.acOn = on;
   g_status.acKnown = true;
   g_status.acChangedMs = millis();
-  logEvent("air conditioner %s (%s)", on ? "on" : "off", reason);
+  logEvent("air conditioner %s (%s) · %s", on ? "on" : "off", reason, sensorReadings().c_str());
   if (on) noteAcOn();
   return true;
 }
@@ -293,7 +308,7 @@ bool setFan(bool on, const char* reason, String* errOut) {
   writeRelay(on);
   if (on && !g_status.fanOn) g_status.fanOnSinceMs = millis();
   g_status.fanOn = on;
-  logEvent("fan %s (%s)", on ? "on" : "off", reason);
+  logEvent("fan %s (%s) · %s", on ? "on" : "off", reason, sensorReadings().c_str());
   return true;
 }
 
@@ -302,7 +317,7 @@ void onRemoteAc(bool on, const String& detail) {
   g_status.acOn = on;
   g_status.acKnown = true;
   g_status.acChangedMs = millis();
-  logEvent("original remote: air conditioner %s (%s)", on ? "on" : "off", detail.c_str());
+  logEvent("original remote: air conditioner %s · %s (%s)", on ? "on" : "off", sensorReadings().c_str(), detail.c_str());
   if (on) noteAcOn();
   if (g_settings.remoteOverride && g_settings.mode == Mode::Auto) {
     controlClearForces();

@@ -43,7 +43,7 @@ const char* resetReasonText() {
 }
 
 void logEvent(const char* fmt, ...) {
-  char msg[192];
+  char msg[256];
   va_list ap;
   va_start(ap, fmt);
   vsnprintf(msg, sizeof msg, fmt, ap);

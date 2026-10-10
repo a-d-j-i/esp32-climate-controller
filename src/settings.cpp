@@ -32,6 +32,8 @@ static const ParamDef PARAMS[] = {
      "Wi-Fi transmit power (2-19.5); lower it on a weak supply, raise it for range"},
     {"watch", PType::UInt, &g_settings.watchS, 0, 3600, "s", false,
      "print a one-line status on the consoles every this many seconds (0 = off)"},
+    {"ssh_idle", PType::UInt, &g_settings.sshIdleMin, 0, 1440, "min", false,
+     "close a Secure Shell session after this many minutes without typing (0 = never)"},
     {"remote_override", PType::Bool, &g_settings.remoteOverride, 0, 1, "", false,
      "switch to manual mode when the original remote is used"},
     {"password_login", PType::Bool, &g_settings.passwordLogin, 0, 1, "", false,
@@ -40,10 +42,14 @@ static const ParamDef PARAMS[] = {
      "calibration added to the cabinet temperature"},
     {"room_offset", PType::Float, &g_settings.roomOffset, -10, 10, "°C", false,
      "calibration added to the room temperature"},
+    {"fan_min_on", PType::UInt, &g_settings.fanMinOnMin, 0, 120, "min", false,
+     "auto: once started, the fan runs at least this long (0 = no minimum)"},
     {"fan_use_room", PType::Bool, &g_settings.fanUseRoom, 0, 1, "", false,
      "auto: start the fan only when the room is cooler (off: the room is only shown)"},
     {"fan_room_margin", PType::Float, &g_settings.fanRoomMargin, 0, 10, "°C", false,
      "auto: the room must be this much cooler than the cabinet to start the fan"},
+    {"fan_room_stop", PType::Float, &g_settings.fanRoomStop, 0, 10, "°C", false,
+     "auto: the fan stops when the room is no more than this much cooler"},
     {"box_offset", PType::Float, &g_settings.boxOffset, -10, 10, "°C", false,
      "calibration added to the box temperature"},
 };
@@ -98,6 +104,7 @@ static bool parseValue(const ParamDef& p, String text, String& err) {
 static bool validate(const Settings& s, String& err) {
   if (s.acOffBelow >= s.acOnAbove) err = "ac_off_below must be lower than ac_on_above";
   else if (s.fanOffBelow >= s.fanOnAbove) err = "fan_off_below must be lower than fan_on_above";
+  else if (s.fanRoomStop > s.fanRoomMargin) err = "fan_room_stop must not be higher than fan_room_margin";
   else return true;
   return false;
 }
@@ -159,22 +166,31 @@ bool settingsSet(const std::vector<std::pair<String, String>>& pairs, String& er
   Lock lk(g_lock);
   Settings backup = g_settings;
   std::vector<const ParamDef*> touched;
+  std::vector<String> before;  // for the event log
   needsReboot = false;
   for (const auto& kv : pairs) {
     const ParamDef* p = findParam(kv.first);
     if (!p) err = "unknown parameter '" + kv.first + "' (see: get)";
+    String old = p ? formatValue(*p) : String();
     if (!p || !parseValue(*p, kv.second, err)) {
       g_settings = backup;
       return false;
     }
     touched.push_back(p);
+    before.push_back(old);
     needsReboot |= p->reboot;
   }
   if (!validate(g_settings, err)) {
     g_settings = backup;
     return false;
   }
-  for (const auto* p : touched) persist(*p);
+  for (size_t i = 0; i < touched.size(); i++) {
+    const ParamDef& p = *touched[i];
+    persist(p);
+    String now = formatValue(p);
+    if (now != before[i])
+      logEvent("set %s %s → %s%s%s", p.name, before[i].c_str(), now.c_str(), *p.unit ? " " : "", p.unit);
+  }
   return true;
 }
 

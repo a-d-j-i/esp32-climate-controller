@@ -50,7 +50,13 @@
 #define SSH_FAIL_DELAY_MAX_S 30        // delay grows by 1 s per consecutive failed password
 #define PASSWORD_MIN_LENGTH 12
 #define RSA_MIN_BITS 2048              // libssh would accept 1024-bit RSA keys
-#define SSH_IDLE_TIMEOUT_MS (15UL * 60 * 1000)
+// TCP keepalive: after this many seconds without traffic the network stack probes the
+// client, and drops the connection after SSH_KEEPALIVE_COUNT unanswered probes, so a
+// client that vanished (laptop asleep, out of Wi-Fi) frees the one session within
+// about 90 s. A live connection is never closed for being quiet unless ssh_idle is set.
+#define SSH_KEEPALIVE_IDLE_S 60
+#define SSH_KEEPALIVE_INTERVAL_S 10
+#define SSH_KEEPALIVE_COUNT 3
 #define SSH_MAX_AUTH_TRIES 3
 #define SSH_TASK_STACK 51200
 

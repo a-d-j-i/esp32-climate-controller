@@ -26,6 +26,9 @@ DhtResult controlSensorTest(SensorId id);
 uint8_t controlSensorPin(SensorId id);
 // e.g. "DHT22, ok", "DHT22, not answering: check wiring and power", "detecting".
 String sensorSummary(const SensorInfo& info);
+// Each sensor's temperature, or "off" while it isn't answering, as in the watch line:
+// "cabinet 26.2 °C · room: off · box 26.4 °C". Also added to every switch in the log.
+String sensorReadings();
 
 // Sends the code assigned with `ac learn` / `ac use` and records the new state. Turning the air
 // conditioner on also turns the fan off.

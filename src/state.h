@@ -20,7 +20,10 @@ struct Settings {
   float roomOffset = 0;
   bool fanUseRoom = true;      // the fan rule checks the room temperature when it is known
   float fanRoomMargin = 1.0;   // the room must be this much cooler to start the fan
+  uint32_t fanMinOnMin = 0;    // once started automatically, the fan runs at least this long
+  float fanRoomStop = 0;       // ... and more than this much cooler to keep it running
   float boxOffset = 0;
+  uint32_t sshIdleMin = 0;     // close a Secure Shell session after this long without typing, 0 = never
   uint32_t watchS = 60;        // status line on the consoles every this many seconds, 0 = off
   float wifiPowerDbm = 15;     // transmit power; lower draws smaller current peaks
 };

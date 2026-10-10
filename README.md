@@ -148,9 +148,16 @@ climate> mode auto
 - **Fan**: on at `fan_on_above`, off at `fan_off_below`, as long as it can help. With
   a room sensor it starts only when
   the room is at least `fan_room_margin` (default 1 °C) cooler than the cabinet, and stops
-  when it no longer is. If the room temperature is unknown (no sensor, or no recent
+  when the room is no more than `fan_room_stop` (default 0 °C) cooler. A cabinet with
+  something warm in it levels off a little above the room, so with `fan_room_stop 0` the
+  fan can keep running until `fan_off_below`; set it to about 1-2 °C to let it stop. If the room temperature is unknown (no sensor, or no recent
   reading) the fan is allowed. `set fan_use_room off` keeps the room temperature
   shown but leaves it out of this rule, so the fan follows the cabinet thresholds alone.
+- `fan_min_on` (minutes, default 0): once the rules start the fan, it runs at least this
+  long, so a cabinet that heats quickly doesn't cycle it every few minutes. It only
+  postpones the stop at `fan_off_below`: a room that is no longer cooler, or the air
+  conditioner coming on, still stops the fan at once. There is no minimum off time: the
+  cabinet could overheat while the fan waits.
 - **Air conditioner**: on at `ac_on_above`, off at `ac_off_below`.
 - **Never both**: turning the air conditioner on (automatically, with `ac on` or with the
   original remote) switches the fan off, and `fan on` is refused until `ac off`.
@@ -202,7 +209,7 @@ had just crossed the threshold, and stay in automatic mode:
 
 The Secure Shell session and the USB console (`pio device monitor`) behave the same:
 
-- Events (fan on, air conditioner off, logins, sensor problems) appear as they happen,
+- Events (fan on, air conditioner off, setting changes, logins, sensor problems) appear as they happen,
   printed above the `climate>` prompt. The prompt stays on the last line and whatever
   you were typing is redrawn, so live output never mixes with your typing.
 - Tab completes commands, setting names, `on`/`off` and stored code names; Tab twice
@@ -232,7 +239,10 @@ The Secure Shell session and the USB console (`pio device monitor`) behave the s
   2-19.5; `status` shows the current value under Wi-Fi).
 
 - One Secure Shell session at a time; a second connection waits until the first ends.
-  Idle sessions close after 15 minutes.
+  A session stays open while it is idle unless `ssh_idle` is set (minutes without
+  typing; `watch` output doesn't count). A client that disappears without closing the
+  connection (laptop asleep, out of Wi-Fi) is detected by TCP keepalive and its
+  session ends within about 90 s, so the slot is never held by a dead connection.
 - `pio run -t erase` followed by an upload wipes everything stored in flash: settings,
   codes, keys, Wi-Fi credentials and the host key.
 
